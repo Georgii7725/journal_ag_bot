@@ -10,8 +10,9 @@ dp = Dispatcher(bot, storage = MemoryStorage())
 
 
 kb_start = InlineKeyboardMarkup(resize_keyboard=True).add(InlineKeyboardButton('REGISTER', callback_data='REGISTER')).insert(InlineKeyboardButton('LOGIN', callback_data='LOGIN')).add(InlineKeyboardButton('HELP', callback_data='HELP'))
-kb_in = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('EXIT')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP'))
-kb_out = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('ENTRANCE')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP'))
+kb = InlineKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('REGISTER', callback_data='REGISTER')).insert(KeyboardButton('LOGIN', callback_data='LOGIN'))
+kb_in = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('EXIT')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
+kb_out = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('ENTRANCE')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
 
 class exit(StatesGroup):
     exit_time = State()

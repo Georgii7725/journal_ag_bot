@@ -246,6 +246,16 @@ async def add_new_user(message: types.Message):
     await exit.exit_time.set()
 
 
+# ROUND CONNECT FROM USER
+@dp.message_handler(text='COMMENT')
+async def round_connect_from_users(message: types.Message):
+    text="""<b>Обратная связь</b>\n<em>Если у вас есть пожелания, просьбы для улучшения нашего бота</em>\n<em>или вы нашли ошибку в работе бота, то оставте отзыв в Google Forms.</em>\n<em>Этот комментарий останеться </em><b>АНОНИМНЫМ:</b>\n<a href="https://forms.gle/ovk73RWEPuCqbCd36">Google Forms</a>"""
+
+    await bot.send_message( chat_id=message.from_user.id,
+                            text=text,
+                            parse_mode="HTML")
+
+
 # STATE exit_time
 @dp.message_handler(state=exit.exit_time)
 async def state1(message: types.Message, state=FSMContext):
@@ -313,7 +323,6 @@ async def state4(message: types.Message, state=FSMContext):
                             reply_markup=kb_in)
 
     await state.finish()
-
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
