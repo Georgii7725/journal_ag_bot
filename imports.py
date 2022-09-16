@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeybo
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram import Bot, Dispatcher, executor, types, Text
+from aiogram import Bot, Dispatcher, executor, types
 
 TOKEN = "5749373743:AAG930y7um-KMc0Qm_mFACsQr4e_GAHCGQk"
 bot = Bot(TOKEN)
