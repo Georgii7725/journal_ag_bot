@@ -1,3 +1,5 @@
+from cgitb import text
+from re import S
 from imports import *
     
 async def on_startup(_):
@@ -10,9 +12,8 @@ async def get_command_start(message: types.Message):
     
     answer_start = f"Приветствую, {message.from_user.full_name}. С вами бот, который поможет тебе временно выйти из АГ! Команда 'HELP' расскажет о функционале"
 
-    await bot.send_message( chat_id=message.from_user.id,
-                            text=answer_start,
-                            parse_mode="HTML",
+    await message.answer(text=answer_start,
+                         parse_mode="HTML",
                             reply_markup=kb_start)
 
 
@@ -24,7 +25,7 @@ async def get_command_help(callback: types.CallbackQuery):
     help_answer = """
     <b>REGISTER</b> - <em>регистрация ученика (при условии проживания в общежитии АГ)</em>\n<b>LOGIN</b> - <em>вход в аккаунт ученика</em>"""
     
-    await bot.send_message( chat_id=callback.from_user.id,
+    await callback.message.answer(
                             text=help_answer,
                             parse_mode="HTML")
 
@@ -48,7 +49,7 @@ async def print_user_info(message: types.Message):
         """
     else:
         my_ans = "<b>Вы не вошли в систему или не зарегистрированы в ней</b>.\n <em>Для подробной информации напишите /help</em>"
-    await bot.send_message(chat_id, text=my_ans,parse_mode="HTML",)
+    await message.answer(chat_id, text=my_ans,parse_mode="HTML",)
 
 
 # REGISTER COMMAND
@@ -58,7 +59,7 @@ async def add_new_user(callback: types.CallbackQuery):
     
     await bot.answer_callback_query(callback.id)
 
-    await bot.send_message( chat_id=callback.from_user.id,
+    await callback.message.answer(
                             text=text,
                             parse_mode="HTML",
                             reply_markup=ReplyKeyboardRemove())
@@ -72,9 +73,8 @@ async def state1(message: types.Message, state=FSMContext):
     text="""<b>Второй шаг регистрации:</b> \n<em>Введи номер комнаты в общежитии</em>"""
 
     await state.update_data(FIO=ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
+    await message.answer(parse_mode="HTML",
+                         text=text)
     await register.num_room.set()
 
 
@@ -86,9 +86,8 @@ async def state2(message: types.Message, state=FSMContext):
     text="""<b>Третий шаг регистрации:</b> \n<em>Введи st-логин для подтверждения аккаунта по почте\nСкорее всего оно окажется в спаме</em>"""
 
     await state.update_data(num_room=ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
+    await message.answer(parse_mode="HTML",
+                         text=text)
     await register.st_reg.set()
 
 # STATE ST - LOGIN IN REGISTER
@@ -102,9 +101,8 @@ async def state3(message: types.Message, state=FSMContext):
     text="""<b>Четвёртый шаг регистрации:</b> \n<em>Введи код подтверждения</em>"""
 
     await state.update_data(st_reg=ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
+    await message.answer(parse_mode="HTML",
+                         text=text)
     await register.check_code_reg.set()
 
 
@@ -121,15 +119,13 @@ async def state4(message: types.Message, state=FSMContext):
         with open('users.csv', 'a') as file:
             file.write(f"{message.from_user.id},{surname},{name},{lastname},{data['num_room']},{data['st_reg']},22:00\n")    
 
-        await bot.send_message( chat_id=message.from_user.id,
-                                text=text,
-                                parse_mode="HTML",
+        await message.answer(ext=text,
+                              parse_mode="HTML",
                                 reply_markup=kb_in)
     else:
         text="""Регистрация не удалась.\nВозможно вы ввели некорректный код активации"""
-        await bot.send_message( chat_id=message.from_user.id,
-                                text=text,
-                                parse_mode="HTML",
+        await message.answer(ext=text,
+                              parse_mode="HTML",
                                 reply_markup=kb_start)
 
 
@@ -144,7 +140,7 @@ async def get_command_login(callback: types.CallbackQuery):
 
     await bot.answer_callback_query(callback.id)
 
-    await bot.send_message( chat_id=callback.from_user.id,
+    await callback.message.answer(
                             text=text,
                             parse_mode="HTML",
                             reply_markup=ReplyKeyboardRemove())
@@ -167,9 +163,8 @@ async def state_log(message: types.Message, state=FSMContext):
 
     await state.update_data(st_log=ans)
     
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
+    await message.answer(parse_mode="HTML",
+                         text=text)
 
     await login.check_code_login.set()
 
@@ -200,9 +195,8 @@ async def check_code_login_def(message: types.Message, state=FSMContext):
     else:
         text="""<b>Вы не смогли войти в аккаунт.</b> \n<b>Скорее всего вы указали неправильный код активации</b>"""
 
-    await bot.send_message( chat_id=message.from_user.id,
-                                text=text,
-                                parse_mode="HTML",
+    await message.answer(    text=text,
+                             parse_mode="HTML",
                                 reply_markup=kb_in)
 
     await state.finish()
@@ -223,27 +217,19 @@ async def get_command_login(message: types.Message):
                 update_data += user
         with  open('users.csv', 'w') as fileWRITE:
             fileWRITE.write(update_data)
-
-        text="<b>Вы успешно вышли из аккаунта!</b>"
+        
+        text1="<b>УСПЕШНО!</b>"
+        text="<em>Вы вышли из аккаунта!</em>"
     else:
-        text="<b>Вы не в системе!</b>"
+        text1="<b>ОШИБКА!</b>"
+        text="<em>Вы не в системе!</em>"
 
-    await bot.send_message( chat_id=message.from_user.id,
-                            text=text,
-                            parse_mode="HTML",
+    await message.answer(text=text1,
+                         reply_markup=ReplyKeyboardRemove(),
+                         parse_mode="HTML")                  
+    await message.answer(text=text,
+                         parse_mode="HTML",
                             reply_markup=kb_start)
-
-
-# EXIT COMMAND
-@dp.message_handler(text=['EXIT'])
-async def add_new_user(message: types.Message):
-    text="""<b>Укажите время выхода</b> \n<em>Формат: ЧЧ:ММ</em>"""
-
-    await bot.send_message( chat_id=message.from_user.id,
-                            text=text,
-                            parse_mode="HTML",
-                            reply_markup=ReplyKeyboardRemove())
-    await exit.exit_time.set()
 
 
 # ROUND CONNECT FROM USER
@@ -251,9 +237,55 @@ async def add_new_user(message: types.Message):
 async def round_connect_from_users(message: types.Message):
     text="""<b>Обратная связь</b>\n<em>Если у вас есть пожелания, просьбы для улучшения нашего бота</em>\n<em>или вы нашли ошибку в работе бота, то оставте отзыв в Google Forms.</em>\n<em>Этот комментарий останеться </em><b>АНОНИМНЫМ:</b>\n<a href="https://forms.gle/ovk73RWEPuCqbCd36">Google Forms</a>"""
 
-    await bot.send_message( chat_id=message.from_user.id,
-                            text=text,
-                            parse_mode="HTML")
+    await message.answer(text=text,
+                         parse_mode="HTML")
+
+
+# # EXIT COMMAND
+# @dp.message_handler(text=['EXIT'])
+# async def command_exit_(message: types.Message):
+#     text="""<b>Укажите время выхода</b> \n<em>Формат: ЧЧ:ММ</em>"""
+
+#     await message.answer(
+#                   text=ext,
+#                                 parse_mode="HTML",
+#                             reply_markup=ReplyKeyboardRemove())
+#     await exit.exit_time.set()
+
+
+# EXIT COMMAND
+@dp.message_handler(text='EXIT')
+async def exit_calendar(message: types.Message):
+    await message.answer(text="""<b>Выберите дату прихода в АГ</b>""",
+                         parse_mode="HTML",
+                         reply_markup=ReplyKeyboardRemove())
+    await message.answer(text="""<em>Если вы вернетесь этим же днём, \nвыберите сегодняшнюю дату:</em>""",
+                         parse_mode="HTML",
+                         reply_markup=await DialogCalendar().start_calendar())
+
+
+# CALENDAR
+@dp.callback_query_handler(dialog_cal_callback.filter())
+async def process_dialog_calendar(callback_query: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    selected, date = await DialogCalendar().process_selection(callback_query, callback_data)
+    if selected:
+        await bot.answer_callback_query(callback_query.id)
+        await exit.cal_date.set()
+        await state.update_data(cal_date=date.strftime("%d.%m.%Y"))
+        await callback_query.message.answer(f"""<b>Ты выбрал: {date.strftime("%d.%m.%Y")}</b>""", parse_mode="HTML")
+        
+        await command_exit_(callback_query.message)
+
+
+# STATE cal_date
+@dp.message_handler(state=exit.cal_date)
+async def command_exit_(message: types.Message): 
+    text="""<b>Укажите время выхода</b> \n<em>Формат: ЧЧ:ММ</em>"""
+
+    await message.answer(text=text,
+                         parse_mode="HTML",
+                        reply_markup=ReplyKeyboardRemove())
+    await exit.exit_time.set()
 
 
 # STATE exit_time
@@ -264,9 +296,8 @@ async def state1(message: types.Message, state=FSMContext):
     text="""<b>Укажите время возвращения в АГ</b> \n<em>Формат: ЧЧ:ММ</em>"""
 
     await state.update_data(exit_time=ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
+    await message.answer(parse_mode="HTML",
+                         text=text)
     await exit.entrance_time.set()
 
 
@@ -278,9 +309,8 @@ async def state2(message: types.Message, state=FSMContext):
     text="""<b>Укажите причину выхода</b>"""
 
     await state.update_data(entrance_time = ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
+    await message.answer(parse_mode="HTML",
+                         text=text)
     await exit.reason.set()
 
 # STATE reason
@@ -292,11 +322,10 @@ async def state3(message: types.Message, state=FSMContext):
     data = await state.get_data()
     
     with open('database.csv', 'a') as file: 
-        file.write(f"{message.from_user.id},{data['exit_time']},{data['entrance_time']},{data['reason']},False\n")
+        file.write(f"{message.from_user.id},{data['exit_time']},{data['entrance_time']},{data['reason']},False,{data['cal_date']}\n")
 
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text,
+    await message.answer(parse_mode="HTML",
+                         text=text,
                             reply_markup=kb_out
                             )
     await exit.flag.set()
@@ -317,10 +346,10 @@ async def state4(message: types.Message, state=FSMContext):
         fileWRITE.write(update_data)
 
 
-    await bot.send_message( chat_id=message.from_user.id,
-                            text=text,
-                            parse_mode="HTML",
-                            reply_markup=kb_in)
+    await message.answer(text=text,
+                         parse_mode="HTML",
+                            reply_markup=kb_in,
+)
 
     await state.finish()
 
