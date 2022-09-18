@@ -74,8 +74,6 @@ async def FIO(message: types.Message, state=FSMContext):
     FIO = FIO.split()
     try:
         surname, name, lastname = FIO[0], FIO[1], FIO[2]
-        print(FIO)
-
         text="""<b>Второй шаг регистрации:</b> \n<em>Введи номер комнаты в общежитии</em>"""
 
         await state.update_data(FIO=FIO)
@@ -131,8 +129,6 @@ async def check(message: types.Message, state=FSMContext):
     if data['check_code_reg'] == reg_active_code:
         text="""<b>Регистрация прошла успешно.</b> \n<em>Система зафиксировала, что ты являешься учеником АГ!</em>"""
         FIO = data['FIO']
-        # print(FIO)
-        # FIO = FIO.split(" ")
         surname, name, lastname = FIO[0], FIO[1], FIO[2]
         with open('users.csv', 'a') as file:
             file.write(f"{message.from_user.id},{surname},{name},{lastname},{data['num_room']},{data['st_reg']},22:00\n")        
