@@ -1,3 +1,4 @@
+from turtle import home
 from imports import *
     
 async def on_startup(_):
@@ -18,15 +19,17 @@ async def get_command_start(message: types.Message):
 
 # HELP COMMAND
 @dp.callback_query_handler(text=['HELP'])
-@dp.message_handler(text=['HELP'])
 async def get_command_help(callback: types.CallbackQuery):
 
     help_answer = """
     <b>REGISTER</b> - <em>регистрация ученика (при условии проживания в общежитии АГ)</em>\n<b>LOGIN</b> - <em>вход в аккаунт ученика</em>"""
+
+    await bot.answer_callback_query(callback.id)
     
     await bot.send_message( chat_id=callback.from_user.id,
                             text=help_answer,
-                            parse_mode="HTML")
+                            parse_mode="HTML",
+                            reply_markup=kb)
 
 
 # USER INFO COMMAND
@@ -66,21 +69,33 @@ async def add_new_user(callback: types.CallbackQuery):
 
 # STATE FIO
 @dp.message_handler(state=register.FIO)
-async def state1(message: types.Message, state=FSMContext):
-    ans = message.text
+async def FIO(message: types.Message, state=FSMContext):
+    FIO = message.text
+    FIO = FIO.split()
+    try:
+        surname, name, lastname = FIO[0], FIO[1], FIO[2]
+        print(FIO)
 
-    text="""<b>Второй шаг регистрации:</b> \n<em>Введи номер комнаты в общежитии</em>"""
+        text="""<b>Второй шаг регистрации:</b> \n<em>Введи номер комнаты в общежитии</em>"""
 
-    await state.update_data(FIO=ans)
-    await bot.send_message( chat_id=message.from_user.id,
+        await state.update_data(FIO=FIO)
+        await bot.send_message( chat_id=message.from_user.id,
                             parse_mode="HTML",
                             text=text)
-    await register.num_room.set()
+        await register.num_room.set()
+    except:
+        text="""<b>Даун пиши ФИО правильно</b>"""
+
+        await bot.send_message( chat_id=message.from_user.id,
+                            parse_mode="HTML",
+                            text=text)
+        return
+
 
 
 # STATE ROOMs NUMBER
 @dp.message_handler(state=register.num_room)
-async def state2(message: types.Message, state=FSMContext):
+async def ROOM(message: types.Message, state=FSMContext):
     ans = message.text
 
     text="""<b>Третий шаг регистрации:</b> \n<em>Введи st-логин для подтверждения аккаунта по почте\nСкорее всего оно окажется в спаме</em>"""
@@ -93,7 +108,7 @@ async def state2(message: types.Message, state=FSMContext):
 
 # STATE ST - LOGIN IN REGISTER
 @dp.message_handler(state=register.st_reg) 
-async def state3(message: types.Message, state=FSMContext):
+async def st(message: types.Message, state=FSMContext):
     
     ans = message.text  
     global reg_active_code
@@ -110,16 +125,17 @@ async def state3(message: types.Message, state=FSMContext):
 
 # STATE CHECK E-MAIL CODE IN REGISTER
 @dp.message_handler(state=register.check_code_reg)
-async def state4(message: types.Message, state=FSMContext):
+async def check(message: types.Message, state=FSMContext):
     await state.update_data(check_code_reg = message.text)
     data = await state.get_data()
     if data['check_code_reg'] == reg_active_code:
         text="""<b>Регистрация прошла успешно.</b> \n<em>Система зафиксировала, что ты являешься учеником АГ!</em>"""
         FIO = data['FIO']
-        FIO = FIO.split()
+        # print(FIO)
+        # FIO = FIO.split(" ")
         surname, name, lastname = FIO[0], FIO[1], FIO[2]
         with open('users.csv', 'a') as file:
-            file.write(f"{message.from_user.id},{surname},{name},{lastname},{data['num_room']},{data['st_reg']},22:00\n")    
+            file.write(f"{message.from_user.id},{surname},{name},{lastname},{data['num_room']},{data['st_reg']},22:00\n")        
 
         await bot.send_message( chat_id=message.from_user.id,
                                 text=text,
@@ -160,16 +176,17 @@ async def state_log(message: types.Message, state=FSMContext):
     if flag:
         global log_active_code
         log_active_code = send_mail(ans)
+        await state.update_data(st_log=ans)
         text="""<em>Введи код подтверждения по st-почте</em>"""
-    else:
-        text="""<em>Пользователь с таким st не зарегистрирован в нашей системе</em>"""
-    
-
-    await state.update_data(st_log=ans)
-    
-    await bot.send_message( chat_id=message.from_user.id,
+        await bot.send_message( chat_id=message.from_user.id,
                             parse_mode="HTML",
                             text=text)
+    else:
+        text="""<em>Пользователь с таким st не зарегистрирован в нашей системе</em>"""
+        await bot.send_message( chat_id=message.from_user.id,
+                            parse_mode="HTML",
+                            text=text)
+        await get_command_start(message)
 
     await login.check_code_login.set()
 
@@ -233,66 +250,73 @@ async def get_command_login(message: types.Message):
                             parse_mode="HTML",
                             reply_markup=kb_start)
 
-
 # EXIT COMMAND
 @dp.message_handler(text=['EXIT'])
 async def add_new_user(message: types.Message):
-    text="""<b>Укажите время выхода</b> \n<em>Формат: ЧЧ:ММ</em>"""
+    text="""<b>Укажите время возвращения</b> \n<em>Формат: ЧЧ:ММ</em>"""
 
     await bot.send_message( chat_id=message.from_user.id,
                             text=text,
                             parse_mode="HTML",
                             reply_markup=ReplyKeyboardRemove())
-    await exit.exit_time.set()
-
-
-# ROUND CONNECT FROM USER
-@dp.message_handler(text='COMMENT')
-async def round_connect_from_users(message: types.Message):
-    text="""<b>Обратная связь</b>\n<em>Если у вас есть пожелания, просьбы для улучшения нашего бота</em>\n<em>или вы нашли ошибку в работе бота, то оставте отзыв в Google Forms.</em>\n<em>Этот комментарий останеться </em><b>АНОНИМНЫМ:</b>\n<a href="https://forms.gle/ovk73RWEPuCqbCd36">Google Forms</a>"""
-
-    await bot.send_message( chat_id=message.from_user.id,
-                            text=text,
-                            parse_mode="HTML")
-
-
-# STATE exit_time
-@dp.message_handler(state=exit.exit_time)
-async def state1(message: types.Message, state=FSMContext):
-    ans = message.text
-
-    text="""<b>Укажите время возвращения в АГ</b> \n<em>Формат: ЧЧ:ММ</em>"""
-
-    await state.update_data(exit_time=ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
     await exit.entrance_time.set()
 
 
-# STATE entrance_time
+# STATE get_entrance_time
 @dp.message_handler(state=exit.entrance_time)
-async def state2(message: types.Message, state=FSMContext):
-    ans = message.text
-
-    text="""<b>Укажите причину выхода</b>"""
-
-    await state.update_data(entrance_time = ans)
-    await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text)
-    await exit.reason.set()
+async def state1(message: types.Message, state=FSMContext):
+    try:
+        ans = message.text
+        reader = csv.DictReader(open('users.csv', 'rt'))
+        database = {}
+        for row in reader:
+            for column, value in row.items():
+                database.setdefault(column, []).append(value)
+        hour_entrance = ans[0]+ans[1]
+        min_entrance = ans[3]+ans[4]
+        hour_entrance_int = int(hour_entrance)
+        min_entrance_int = int(min_entrance)
+        if(ans[2] == ":"):
+            hour_al = database["al_time"][0][0] + database["al_time"][0][1]
+            min_al = database["al_time"][0][3] + database["al_time"][0][4]
+            if hour_entrance < hour_al or (hour_entrance == hour_al and min_entrance <= min_al):
+                text="""<b>Укажите причину выхода</b>"""
+                await state.update_data(entrance_time = f'{hour_entrance}:{min_entrance}')
+                #await state.update_data(exit_time=f'{hour_exit}:{min_exit}')
+                await bot.send_message( chat_id=message.from_user.id,
+                                parse_mode="HTML",
+                                text=text)
+                await exit.reason.set()
+            else:
+                await message.answer("Вам не разрешено приходить в это время", reply_markup=kb_in)
+                await state.finish()
+        else:
+            await message.answer("Введите время в формате 'ЧЧ:ММ'")
+            return
+    except Exception as e:
+        print(e)
+        await message.answer("Введите время в формате 'ЧЧ:ММ'")
+        return
 
 # STATE reason
 @dp.message_handler(state=exit.reason) 
 async def state3(message: types.Message, state=FSMContext):
-
     await state.update_data(reason=message.text)
     text="""<b>Вы можете идти</b> \n<em>Когда будете подходить к АГ, нажмите кнопку ENTRANCE</em>"""
     data = await state.get_data()
+    hour_exit = ""
+    min_exit = ""
+    if(time.localtime().tm_min < 10):
+        min_exit = f'0{time.localtime().tm_min}'
+    else:
+        min_exit = time.localtime().tm_min
+    if(time.localtime().tm_hour < 10):
+        hour_exit = f'0{time.localtime().tm_hour}'
+    else:
+        hour_exit = time.localtime().tm_hour
     
     with open('database.csv', 'a') as file: 
-        file.write(f"{message.from_user.id},{data['exit_time']},{data['entrance_time']},{data['reason']},False\n")
+        file.write(f"{message.from_user.id},{f'{hour_exit}:{min_exit}'},{data['entrance_time']},{data['reason']},False\n")
 
     await bot.send_message( chat_id=message.from_user.id,
                             parse_mode="HTML",
