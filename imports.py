@@ -3,8 +3,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher.filters import Text
+from aiogram_calendar import dialog_cal_callback, DialogCalendar
 
-TOKEN = "5749373743:AAG930y7um-KMc0Qm_mFACsQr4e_GAHCGQk"
+
+TOKEN = "5794149420:AAFFUnDLgDq4H7sVTpvxe5VC4N7Ubh-E9j0"
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage = MemoryStorage())
 
@@ -14,7 +17,9 @@ kb = InlineKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('REGISTER', c
 kb_in = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('EXIT')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
 kb_out = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('ENTRANCE')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
 
+
 class exit(StatesGroup):
+    cal_date = State()
     exit_time = State()
     entrance_time = State()
     reason = State()
