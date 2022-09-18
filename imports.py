@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, executor, types
 import time
 import csv
 
-TOKEN = "5749373743:AAG930y7um-KMc0Qm_mFACsQr4e_GAHCGQko"
+TOKEN = "5749373743:AAG930y7um-KMc0Qm_mFACsQr4e_GAHCGQk"
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage = MemoryStorage())
 
