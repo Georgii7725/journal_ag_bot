@@ -3,19 +3,22 @@ from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher.filters import Text
+from aiogram_calendar import dialog_cal_callback, DialogCalendar
+import time
+import csv
 
 TOKEN = "5749373743:AAG930y7um-KMc0Qm_mFACsQr4e_GAHCGQk"
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage = MemoryStorage())
 
-
-kb_start = InlineKeyboardMarkup(resize_keyboard=True).add(InlineKeyboardButton('REGISTER', callback_data='REGISTER')).insert(InlineKeyboardButton('LOGIN', callback_data='LOGIN')).add(InlineKeyboardButton('HELP', callback_data='HELP'))
-kb = InlineKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('REGISTER', callback_data='REGISTER')).insert(KeyboardButton('LOGIN', callback_data='LOGIN'))
-kb_in = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('EXIT')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
-kb_out = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('ENTRANCE')).insert(KeyboardButton('PROFILE')).add(KeyboardButton('LOGOUT')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
+kb_start = InlineKeyboardMarkup(resize_keyboard=True).add(InlineKeyboardButton('REGISTER', callback_data='REGISTER')).add(InlineKeyboardButton('HELP', callback_data='HELP'))
+kb = InlineKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('REGISTER', callback_data='REGISTER'))
+kb_in = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('EXIT')).insert(KeyboardButton('PROFILE')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
+kb_out = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton('ENTRANCE')).insert(KeyboardButton('PROFILE')).insert(KeyboardButton('HELP')).add(KeyboardButton('COMMENT'))
 
 class exit(StatesGroup):
-    exit_time = State()
+    cal_date = State()
     entrance_time = State()
     reason = State()
     flag = State() # Вышел на улицу - False, вернулся в АГ - True
@@ -61,12 +64,15 @@ def check_reg(student_st: str):
 
 import smtplib, random
 def send_mail(student_st):
-    smtpObj = smtplib.SMTP('smtp.yandex.ru:587')
-    smtpObj.starttls()
-    smtpObj.login('ag.spbu@yandex.ru', "Pi31415Pi")
-    random_number = str(random.randint(100, 1000))
-    student_mail = student_st + "@student.spbu.ru"
-    smtpObj.sendmail("ag.spbu@yandex.ru",[student_mail], random_number)
-    smtpObj.quit()
-    return random_number
+    try:
+        smtpObj = smtplib.SMTP('smtp.yandex.ru:587')
+        smtpObj.starttls()
+        smtpObj.login('ag.spbu@yandex.ru', "Pi31415Pi")
+        random_number = str(random.randint(100, 1000))
+        student_mail = student_st + "@student.spbu.ru"
+        smtpObj.sendmail("ag.spbu@yandex.ru",[student_mail], random_number)
+        smtpObj.quit()
+        return random_number
+    except:
+        return
     
