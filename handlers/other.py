@@ -31,7 +31,7 @@ async def print_user_info(message: types.Message):
     chat_id=str(message.from_user.id)
     flag, index = check_log(chat_id)
     if flag:
-        with open('database/users.csv', 'r', encoding='utf8') as file:
+        with open('database/users.csv', 'rt', encoding='utf8') as file:
             user = file.readlines()[index]
             user = user.split(',')
             my_ans = f"""<b>Данные пользователя:</b>
@@ -54,7 +54,7 @@ async def round_connect_from_users(message: types.Message):
 
 # Проверка залогинен пользователь или нет по telegram id
 def check_log(user_id: str):
-    with open('database/users.csv', 'r') as file:
+    with open('database/users.csv', 'rt', encoding='utf8') as file:
         for index, user in enumerate(file.readlines()):
             user = user.split(',')
             if user_id == user[0]:
