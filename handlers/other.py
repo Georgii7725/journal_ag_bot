@@ -24,7 +24,7 @@ async def get_command_help_message(message: types.Message):
     <b>Выйти из АГ</b> и <b>Я в АГ</b> - <em>после регистрации у Вас появится доступ к функциям "журнала": чтобы выйти из АГ, нажмите на кнопку 'Выйти из АГ', укажите предполагаемое время возвращения, а также причину, по которой вы покидаете АГ.</em>\n
     <b>Обратная связь</b> - <em>с помощью этой кнопки Вы можете оставить свой отзыв, комментарий или предложение, чтобы наша команда могла улучшить работу бота.</em>"""
 
-    await message.answer(text=help_answer,parse_mode="HTML")
+    await message.answer(text=help_answer,parse_mode="HTML", reply_markup=kb_in)
 
 # USER INFO COMMAND
 async def print_user_info(message: types.Message):
@@ -50,7 +50,7 @@ async def print_user_info(message: types.Message):
 async def round_connect_from_users(message: types.Message):
     text="""<b>Обратная связь</b>\n<em>Если у вас есть пожелания, просьбы для улучшения нашего бота</em>\n<em>или вы нашли ошибку в работе бота, то оставте отзыв в Google Forms.</em>\n<em>Этот комментарий останеться </em><b>АНОНИМНЫМ:</b>\n<a href="https://forms.gle/ovk73RWEPuCqbCd36">Google Forms</a>"""
 
-    await message.answer(text=text, parse_mode="HTML")
+    await message.answer(text=text, parse_mode="HTML", reply_markup=kb_in)
 
 # Проверка залогинен пользователь или нет по telegram id
 def check_log(user_id: str):
