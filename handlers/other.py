@@ -1,4 +1,3 @@
-from email.message import Message
 from keyboards import *
 from create_bot import *
 
@@ -19,7 +18,7 @@ async def get_command_help_callback(callback: types.CallbackQuery):
     # await callback.answer_callback_query(callback.id)
     await callback.message.answer(text=help_answer,parse_mode="HTML", reply_markup=kb_help)
 
-async def get_command_help_message(message: Message):
+async def get_command_help_message(message: types.Message):
     
     help_answer = """    <b>Регистрация</b> - <em>Вам необходимо зарегистрироваться, чтобы пользоваться ботом. Для регистрации потребуется ваше ФИО, а также ваша почта st.</em>\n
     <b>Выйти из АГ</b> и <b>Я в АГ</b> - <em>после регистрации у Вас появится доступ к функциям "журнала": чтобы выйти из АГ, нажмите на кнопку 'Выйти из АГ', укажите предполагаемое время возвращения, а также причину, по которой вы покидаете АГ.</em>\n
