@@ -4,6 +4,7 @@ from create_bot import *
 async def on_startup(_):
     print("BOT IS STARTING")
 
+
 registration.register_handlers(dp)
 exit.register_handlers(dp)
 other.register_handlers(dp)

@@ -1,6 +1,6 @@
 from keyboards import *
 from create_bot import *
-import csv
+from work_bd import *
 
 # Состояния для регистрации
 class register(StatesGroup):
@@ -23,13 +23,9 @@ async def FIO(message: types.Message, state=FSMContext):
     FIO = message.text
     FIO = FIO.split()
     try:
-        surname, name, lastname = FIO[0], FIO[1], FIO[2]                        # Проверка, что ввели 3 слова
-        with open('database/administration.csv', 'rt', encoding="utf8") as file:
-            persons = csv.DictReader(file)
-            flag = False
-            for person in persons:
-                if person['name'] == name and person['surname'] == surname:     # Проверка, что есть в списках
-                    flag = True
+        surname, name, lastname = FIO[0], FIO[1], FIO[2]                                # Проверка, что ввели 3 слова
+        flag = check_exists_FI(surname, name)
+
         if flag:
             text="""<b>Второй шаг регистрации:</b> \n<em>Введи st-логин для подтверждения аккаунта по почте\nСкорее всего оно окажется в спаме</em>"""
 
@@ -40,31 +36,26 @@ async def FIO(message: types.Message, state=FSMContext):
             text="""<b>По нашим данным Вы не живёте в АГ</b>
             Если это не так, обратитесь к разработчикам, их telegram-аккаунты вы можете найти в описании бота"""
 
-            await message.answer(parse_mode="HTML",text=text)
+            await message.answer(parse_mode="HTML",text=text,reply_markup=ReplyKeyboardRemove())
             await state.finish()
-    except:
+    except Exception as e:
+        print(e)
         text="""<b>Напишите полное ФИО</b>"""
 
-        await message.answer(parse_mode="HTML",text=text)
+        await message.answer(parse_mode="HTML",text=text, reply_markup=ReplyKeyboardRemove())
         return
 
 # Получили st
 async def st(message: types.Message, state=FSMContext):
-    ans = str(message.text)  
+    ans = message.text  
+    new_user = check_exists_st(ans)
 
-    new_user = True
-    with open('database/users.csv', 'rt', encoding="utf8") as file:
-        users = csv.DictReader(file)
-        for user in users:
-            if user['st'] == ans:
-                new_user = False
-                break
-
-    if not new_user:
-        text = """<b>Ошибка регистрации</b> \nПохоже, что Вы уже зарегестрированы(\nЕсли вы всё равно не можете пользоваться ботом, обратитесь к разработчикам"""
+    if new_user:
+        text = """<b>Ошибка регистрации</b> \nПохоже, что Вы уже зарегестрированы\nЕсли вы всё равно не можете пользоваться ботом, обратитесь к разработчикам"""
         await bot.send_message( chat_id=message.from_user.id,
                             parse_mode="HTML",
-                            text=text)
+                            text=text,
+                            reply_markup=kb_in)
         await state.finish()
 
     else:
@@ -73,7 +64,7 @@ async def st(message: types.Message, state=FSMContext):
 
         text="""<b>Третий шаг регистрации:</b> \n<em>Введи код подтверждения, высланный Вам на почту st</em>"""
 
-        await message.answer(parse_mode="HTML",text=text)
+        await message.answer(parse_mode="HTML",text=text, reply_markup=ReplyKeyboardRemove())
         await register.received_activation_code.set()
 
 # Проверка кода активации
@@ -84,15 +75,11 @@ async def check(message: types.Message, state=FSMContext):
         text="""<b>Регистрация прошла успешно.</b> \n<em>Система зафиксировала, что ты являешься учеником АГ!</em>"""
         FIO = data['FIO']
         surname, name, lastname = FIO[0], FIO[1], FIO[2]
-        with open('database/administration.csv', 'rt', encoding="utf8") as file:
-            persons = csv.DictReader(file)
-            for person in persons:
-                if name == person['name'] and surname == person['surname']:
-                    room = person['room']
-                    al_time = person['al_time']
-                    break
-        with open('database/users.csv', 'a', encoding='utf8') as file:
-            file.write(f"{message.from_user.id},{surname},{name},{lastname},{room},{data['st']},{al_time}\n")
+        al_time, room = get_al_time_room(surname, name)
+
+        user = [message.from_user.id, surname, name, lastname, room, data['st'], al_time]
+        add_user(user)
+
         await message.answer(text=text,parse_mode="HTML",reply_markup=kb_in)
         await state.finish()
     else:

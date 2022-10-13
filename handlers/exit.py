@@ -1,14 +1,13 @@
 from keyboards import *
 from create_bot import *
-from handlers.other import check_log
 from aiogram_calendar import dialog_cal_callback, DialogCalendar
-import time, csv
+import time
+from work_bd import *
 
 class exit_(StatesGroup):
     cal_date = State()          # Дата возвращения
     entrance_time = State()     # Время возвращения
     reason = State()            # Причина возвращения
-    flag = State()              # Вышел на улицу - False, вернулся в АГ - True
 
 # EXIT COMMAND
 async def exit_calendar(message: types.Message):
@@ -41,11 +40,6 @@ async def add_new_user(message: types.Message):
 async def state1(message: types.Message, state=FSMContext):
     try:
         ans = message.text
-        reader = csv.DictReader(open('database/users.csv', 'rt', encoding='utf8'))
-        database = {}
-        for row in reader:
-            for column, value in row.items():
-                database.setdefault(column, []).append(value)
 
         hour_entrance = ans[0]+ans[1]
         min_entrance = ans[3]+ans[4]
@@ -53,17 +47,21 @@ async def state1(message: types.Message, state=FSMContext):
         min_entrance_int = int(min_entrance)
 
         if(ans[2] == ":"):
-            hour_al = database["al_time"][0][0] + database["al_time"][0][1]
-            min_al = database["al_time"][0][3] + database["al_time"][0][4]
-            if hour_entrance < hour_al or (hour_entrance == hour_al and min_entrance <= min_al):
-                text="""<b>Укажите причину выхода</b>"""
-                await state.update_data(entrance_time = f'{hour_entrance}:{min_entrance}')
-                #await state.update_data(exit_time=f'{hour_exit}:{min_exit}')
-                await message.answer(parse_mode="HTML",text=text)
-                await exit_.reason.set()
-            else:
-                await message.answer("Вы собираетесь придти после разрешённого Вам времени\nИзмените время возвращения", reply_markup=kb_in) #FIXME
-                await state.finish()
+            text="""<b>Укажите причину выхода</b>"""
+            await state.update_data(entrance_time = f'{hour_entrance}:{min_entrance}')
+            await message.answer(parse_mode="HTML",text=text)
+            await exit_.reason.set()
+
+            # hour_al = database["al_time"][0][0] + database["al_time"][0][1]
+            # min_al = database["al_time"][0][3] + database["al_time"][0][4]
+            # if hour_entrance < hour_al or (hour_entrance == hour_al and min_entrance <= min_al):
+            #     text="""<b>Укажите причину выхода</b>"""
+            #     await state.update_data(entrance_time = f'{hour_entrance}:{min_entrance}')
+            #     await message.answer(parse_mode="HTML",text=text)
+            #     await exit_.reason.set()
+            # else:
+            #     await message.answer("Вы собираетесь придти после разрешённого Вам времени\nИзмените время возвращения", reply_markup=kb_in) #FIXME
+            #     await state.finish()
         else:
             await message.answer("Введите время в формате 'ЧЧ:ММ'")
             return
@@ -83,39 +81,21 @@ async def state3(message: types.Message, state=FSMContext):
     day_exit = f'0{time.localtime().tm_mday}' if time.localtime().tm_mday < 10 else f'{time.localtime().tm_mday}'
     month_exit = f'0{time.localtime().tm_mon}' if time.localtime().tm_mon < 10 else f'{time.localtime().tm_mon}'
     year_exit = f'{time.localtime().tm_year}'
-
-    users_st = 0
-    with open('database/users.csv', 'rt', encoding="utf8") as file:
-        reader = csv.reader(file)
-        for i in reader:
-            if f'{i[0]}' == f'{message.from_user.id}':
-                users_st = i[5]
-                break
-
-
-    with open('database/database.csv', 'a', encoding='utf') as file: 
-        file.write(f"{f'{users_st}'},{f'{day_exit}.{month_exit}.{year_exit}'},{f'{hour_exit}:{min_exit}'},{data['cal_date']},{data['entrance_time']},{data['reason']},False\n")
-
+    st = get_st(str(message.from_user.id))
+    
+    params = [st, f'{day_exit}.{month_exit}.{year_exit}', f'{hour_exit}:{min_exit}', data['cal_date'], data['entrance_time'], data['reason']]
+    add_exit(params)
+    
     await message.answer(parse_mode="HTML",text=text,reply_markup=kb_out)
-    await exit_.flag.set()
+    await state.finish()
 
 # STATE flag
-async def state4(message: types.Message, state=FSMContext):
+async def entrance(message: types.Message):
     text="<b>С возвращением!</b>"
-    fl, index = check_log(message.from_user.id)
-    with open('database/database.csv', 'r', encoding='utf8') as fileREAD:
-        data = fileREAD.readlines()
-        update_user = data[index].replace("False", "True")
-        data[index] = update_user
-        update_data = ""
-        for user in data:
-            update_data += user
-    with  open('database/database.csv', 'w', encoding='utf8') as fileWRITE:
-        fileWRITE.write(update_data)
-
+    st = get_st(str(message.from_user.id))
+    update_database(st)
+    
     await message.answer(text=text,parse_mode="HTML",reply_markup=kb_in)
-
-    await state.finish()
 
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(exit_calendar, text='Выйти из АГ')
@@ -123,4 +103,4 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(add_new_user, state=exit_.cal_date)
     dp.register_message_handler(state1, state=exit_.entrance_time)
     dp.register_message_handler(state3, state=exit_.reason)
-    dp.register_message_handler(state4, state=exit_.flag)
+    dp.register_message_handler(entrance, text='Я в АГ')
