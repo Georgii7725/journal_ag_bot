@@ -13,9 +13,6 @@ def create_connection(path):
 
     return connection
 
-
-
-# DML команды
 def add_user(user: list):
     connection = create_connection("journal_ag_bot.sqlite")
     cursor = connection.cursor()
@@ -42,7 +39,6 @@ def get_user(tg_id):
         connection.close
         return None
 
-
 def get_st(tg_id):
     connection = create_connection("journal_ag_bot.sqlite")
     cursor = connection.cursor()
@@ -57,7 +53,6 @@ def get_st(tg_id):
         print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
         connection.close()
         return None
-
 
 def add_exit(params: list):
     connection = create_connection("journal_ag_bot.sqlite")
@@ -113,7 +108,6 @@ def get_al_time_from_users(tg_id):
         connection.close()
         return None
 
-
 def check_exists_tg_id(tg_id):    # ["surname", "name"]
     connection = create_connection("journal_ag_bot.sqlite")
     cursor = connection.cursor()
@@ -129,7 +123,6 @@ def check_exists_tg_id(tg_id):    # ["surname", "name"]
         connection.close()
         return False
 
-
 def check_is_user_out(st):
     connection = create_connection("journal_ag_bot.sqlite")
     cursor = connection.cursor()
@@ -144,7 +137,6 @@ def check_is_user_out(st):
         print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
         connection.close()
         return False
-
 
 def check_exists_FI(surname, name):
     connection = create_connection("journal_ag_bot.sqlite")
@@ -189,4 +181,3 @@ def print_table(table: str) -> list:
     except Error as e:
         connection.close()
         print(f"The error '{e}' occurred")
-

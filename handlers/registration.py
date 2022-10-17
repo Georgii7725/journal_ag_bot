@@ -1,6 +1,7 @@
 from keyboards import *
 from create_bot import *
 from work_bd import *
+import traceback
 
 # Состояния для регистрации
 class register(StatesGroup):
@@ -55,7 +56,7 @@ async def FIO(message: types.Message, state=FSMContext):
             await message.answer(text=answer_start,parse_mode="HTML",reply_markup=kb_start)# номпрально импортироваь get_command_start изз other  у меня не получилось поэтому будет так, если получится импортировать поэалуйста
             await state.finish()
     except Exception as e:
-        print(traceback.format_exc())
+        print(e, "\n", traceback.format_exc())
         text="""<b>Напишите полное ФИО</b>"""
 
         await message.answer(parse_mode="HTML",text=text, reply_markup=ReplyKeyboardRemove())
