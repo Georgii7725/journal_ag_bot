@@ -2,7 +2,7 @@ from handlers import registration, exit, other
 from create_bot import *
 
 async def on_startup(_):
-    print("BOT IS STARTING")
+    print("BOT HAS STARTED")
 
 
 registration.register_handlers(dp)
