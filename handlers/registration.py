@@ -17,7 +17,7 @@ async def cancel_st(callback: types.CallbackQuery, state: FSMContext):
     await add_new_user(callback, state)
 
 # Начали регистрацию
-async def add_new_user(callback: types.CallbackQuery, state:FSMContext):
+async def add_new_user(callback: types.CallbackQuery):
     if check_exists_tg_id(callback.from_user.id):
         text="""<b>Вы уже зарегистрированы</b>"""
         st = get_st(callback.from_user.id)
@@ -96,7 +96,8 @@ async def check(message: types.Message, state=FSMContext):
     else:
         text="""<b>Вы ввели неверный код активации</b>\n Проверьте, правильно ли Вы ввели код, попробуйте снова.\n Если код не пришёл, или Вы уверенны, что вводите правильный код активации, обратитесь к разработчикам, их telegram аккаунты указаны в описании бота"""
         await message.answer(text=text,parse_mode="HTML")
-        return
+        await state.finish()
+        await add_new_user(types.CallbackQuery)
 
 # Отправка кода активации
 import smtplib, random
