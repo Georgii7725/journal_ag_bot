@@ -53,7 +53,7 @@ async def state1(message: types.Message, state=FSMContext):
         min_entrance = ans[3]+ans[4]
         hour_entrance_int = int(hour_entrance)
         min_entrance_int = int(min_entrance)
-        al_time = get_al_time_from_users(message.from_user.id)[0]
+        al_time = get_al_time_from_users(message.from_user.id)
         al_time = al_time.split("/")
         
         if(ans[2] == ":"):

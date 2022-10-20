@@ -102,7 +102,7 @@ def get_al_time_from_users(tg_id):
         al_time = cursor.fetchone()
         connection.commit()
         connection.close()
-        return al_time
+        return al_time[0]
     except Error as e:
         print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
         connection.close()
