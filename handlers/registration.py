@@ -13,10 +13,18 @@ class register(StatesGroup):
 async def cancel_st(callback: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await bot.answer_callback_query(callback.id)
-    await add_new_user(callback, state  )
+    await add_new_user(callback, state)
 
 # Начали регистрацию
 async def add_new_user(callback: types.CallbackQuery, state:FSMContext):
+    if check_exists_tg_id(callback.from_user.id):
+        text="""<b>Вы уже зарегистрированы</b>"""
+        st = get_st(callback.from_user.id)
+        flag = check_is_user_out(st)
+        if flag:    kb = kb_in 
+        else:       kb = kb_out  
+        await callback.message.answer(text=text,parse_mode="HTML",reply_markup=kb)
+        return
     text="""<b>Первый шаг регистрации:</b> \n<em>Введи своё ФИО через пробел</em>"""
 
     await bot.answer_callback_query(callback.id)
@@ -103,7 +111,7 @@ def send_mail(student_st):
         random_number = int(random_number)
         return random_number
     except Exception as e:
-        print(e)
+        print(e, "\n", traceback.format_exc())
         return
 
 

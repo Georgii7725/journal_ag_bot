@@ -94,7 +94,7 @@ def get_al_time_room_from_adm(surname, name):
         connection.close()
         return al_time, room
     except Error as e:
-        print(f"The error '{e}' occurred.")#\n{query}\n{traceback.format_exc()}")
+        print(f"The error '{e}' occurred.\n{traceback.format_exc()}")
         connection.close()
         return None
 
@@ -127,7 +127,7 @@ def check_exists_tg_id(tg_id):    # ["surname", "name"]
     except Error as e:
         print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
         connection.close()
-        return True
+        return False
 
 
 def check_is_user_out(st):
@@ -174,7 +174,7 @@ def check_exists_st(st: str):
     except Error as e:
         print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
         connection.close()
-        return True
+        return False
 
 def print_table(table: str) -> list:
     connection = create_connection("journal_ag_bot.sqlite")
