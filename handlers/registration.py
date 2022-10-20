@@ -9,8 +9,14 @@ class register(StatesGroup):
     real_activation_code = State()          # Сгенерированный код активации                 int
     received_activation_code = State()      # Полученный от пользователя код активации      int
 
+# Отмена handlera st для повторной регистрации
+async def cancel_st(callback: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    await bot.answer_callback_query(callback.id)
+    await add_new_user(callback, state  )
+
 # Начали регистрацию
-async def add_new_user(callback: types.CallbackQuery):
+async def add_new_user(callback: types.CallbackQuery, state:FSMContext):
     text="""<b>Первый шаг регистрации:</b> \n<em>Введи своё ФИО через пробел</em>"""
 
     await bot.answer_callback_query(callback.id)
@@ -18,14 +24,13 @@ async def add_new_user(callback: types.CallbackQuery):
     await callback.message.answer(text=text,parse_mode="HTML",reply_markup=ReplyKeyboardRemove())
     await register.FIO.set()
 
-# Получили ФИО
+# Получили ФИО  
 async def FIO(message: types.Message, state=FSMContext):
     FIO = message.text
     FIO = FIO.split()
     try:
         surname, name, lastname = FIO[0], FIO[1], FIO[2]                                # Проверка, что ввели 3 слова
         flag = check_exists_FI(surname, name)
-
         if flag:
             text="""<b>Второй шаг регистрации:</b> \n<em>Введи st-логин для подтверждения аккаунта по почте\nСкорее всего оно окажется в спаме</em>"""
 
@@ -36,10 +41,13 @@ async def FIO(message: types.Message, state=FSMContext):
             text="""<b>По нашим данным Вы не живёте в АГ</b>
             Если это не так, обратитесь к разработчикам, их telegram-аккаунты вы можете найти в описании бота"""
 
-            await message.answer(parse_mode="HTML",text=text,reply_markup=ReplyKeyboardRemove())
+            await message.answer(parse_mode="HTML",text=text)
+            answer_start = f"Приветствую, {message.from_user.full_name}. Этот бот поможет вам выйти из АГ. Чтобы больше узнать о функционале, воспользуйтесь кнопкой <b>Помощь</b>"""
+
+            await message.answer(text=answer_start,parse_mode="HTML",reply_markup=kb_start)# номпрально импортироваь get_command_start изз other  у меня не получилось поэтому будет так, если получится импортировать поэалуйста
             await state.finish()
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         text="""<b>Напишите полное ФИО</b>"""
 
         await message.answer(parse_mode="HTML",text=text, reply_markup=ReplyKeyboardRemove())
@@ -52,19 +60,14 @@ async def st(message: types.Message, state=FSMContext):
 
     if new_user:
         text = """<b>Ошибка регистрации</b> \nПохоже, что Вы уже зарегестрированы\nЕсли вы всё равно не можете пользоваться ботом, обратитесь к разработчикам"""
-        await bot.send_message( chat_id=message.from_user.id,
-                            parse_mode="HTML",
-                            text=text,
-                            reply_markup=kb_in)
+        await message.answer(parse_mode="HTML",text=text,reply_markup=kb_in)
         await state.finish()
-
     else:
         real_activation_code = send_mail(ans)
         await state.update_data(st = ans, real_activation_code = real_activation_code)
 
-        text="""<b>Третий шаг регистрации:</b> \n<em>Введи код подтверждения, высланный Вам на почту st</em>"""
-
-        await message.answer(parse_mode="HTML",text=text, reply_markup=ReplyKeyboardRemove())
+        text="""<b>Третий шаг регистрации:</b> \n<em>Введи код подтверждения, высланный Вам на почту st\nЕсли вы ввели неправильный st-логин или вам не пришёл код, нажмите кнопку отмена и начните регистрацию заново</em>"""
+        await message.answer(parse_mode="HTML",text=text,reply_markup=cancel_st_kb)
         await register.received_activation_code.set()
 
 # Проверка кода активации
@@ -75,8 +78,7 @@ async def check(message: types.Message, state=FSMContext):
         text="""<b>Регистрация прошла успешно.</b> \n<em>Система зафиксировала, что ты являешься учеником АГ!</em>"""
         FIO = data['FIO']
         surname, name, lastname = FIO[0], FIO[1], FIO[2]
-        al_time, room = get_al_time_room(surname, name)
-
+        al_time, room = get_al_time_room_from_adm(surname, name)
         user = [message.from_user.id, surname, name, lastname, room, data['st'], al_time]
         add_user(user)
 
@@ -93,18 +95,20 @@ def send_mail(student_st):
     try:
         smtpObj = smtplib.SMTP('smtp.yandex.ru:587')
         smtpObj.starttls()
-        smtpObj.login('ag.spbu@yandex.ru', "Pi31415Pi")
+        smtpObj.login('ag.spbu@yandex.ru', "B8ZjZ6yXxYPjDj2")
         random_number = str(random.randint(100, 1000))
         student_mail = student_st + "@student.spbu.ru"
         smtpObj.sendmail("ag.spbu@yandex.ru",[student_mail], random_number)
         smtpObj.quit()
         random_number = int(random_number)
         return random_number
-    except:
+    except Exception as e:
+        print(e)
         return
 
 
 def register_handlers(dp: Dispatcher):
+    dp.register_callback_query_handler(cancel_st, text='cancel_st', state=register.received_activation_code)
     dp.register_callback_query_handler(add_new_user, text=['REGISTER'])
     dp.register_message_handler(FIO, state=register.FIO)
     dp.register_message_handler(st, state=register.st)

@@ -87,13 +87,14 @@ def get_al_time_room_from_adm(surname, name):
     cursor = connection.cursor()
     query = "SELECT al_time, room FROM administration WHERE surname = ? AND name = ?"
     try:
+        print
         cursor.execute(query, [surname, name])
         al_time, room = cursor.fetchone()
         connection.commit()
         connection.close()
         return al_time, room
     except Error as e:
-        print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
+        print(f"The error '{e}' occurred.")#\n{query}\n{traceback.format_exc()}")
         connection.close()
         return None
 
@@ -135,7 +136,7 @@ def check_is_user_out(st):
     query = "SELECT flag FROM database WHERE KEY = ?"
     try:
         cursor.execute(query, [st])
-        flag = cursor.fetchall() #FIXME
+        flag = cursor.fetchall()
         connection.commit()
         connection.close()
         return flag[-1][0]
@@ -151,13 +152,14 @@ def check_exists_FI(surname, name):
     query = "SELECT EXISTS(SELECT * FROM administration WHERE surname = ? and name = ?)"
     try:
         flag = cursor.execute(query, [surname, name])
+        flag = flag.fetchone() # ты возвращал объект cursor. if в регистрациии нихуя не понимал что имел ввиду под cursor
         connection.commit()
         connection.close()
-        return flag
+        return bool(flag[0])# инедкс 0, тк это кортеж tuple и когда ты просто писал flag там был вывод (0,) а bool просто мне нравится bool
     except Error as e:
         print(f"The error '{e}' occurred.\n{query}\n{traceback.format_exc()}")
         connection.close()
-        return True
+        return False #Гош да ты гений я тут блять сижду переделываю последний хендлер чтобы выдавало что такого имени и фамилии нет а тыт тут true возвращал
 
 def check_exists_st(st: str):
     connection = create_connection("journal_ag_bot.sqlite")
