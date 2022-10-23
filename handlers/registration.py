@@ -55,7 +55,7 @@ async def FIO(message: types.Message, state=FSMContext):
             await get_command_start(message)
             await state.finish()
     except Exception as e:
-        print(e, "\n", traceback.format_exc())
+        print(traceback.format_exc())
         text="""<b>Напишите полное ФИО</b>"""
 
         await message.answer(parse_mode="HTML",text=text, reply_markup=ReplyKeyboardRemove())
@@ -112,7 +112,7 @@ def send_mail(student_st):
         random_number = int(random_number)
         return random_number
     except Exception as e:
-        print(e, "\n", traceback.format_exc())
+        print(traceback.format_exc())
         return
 
 
