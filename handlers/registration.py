@@ -1,7 +1,6 @@
 from keyboards import *
 from create_bot import *
 from work_bd import *
-import traceback
 from .other import get_command_start
 
 # Состояния для регистрации
@@ -18,7 +17,7 @@ async def cancel_st(callback: types.CallbackQuery, state: FSMContext):
     await add_new_user(callback, state)
 
 # Начали регистрацию
-async def add_new_user(callback: types.CallbackQuery):
+async def add_new_user(callback: types.CallbackQuery, state:FSMContext):
     if check_exists_tg_id(callback.from_user.id):
         text="""<b>Вы уже зарегистрированы</b>"""
         st = get_st(callback.from_user.id)
@@ -53,6 +52,7 @@ async def FIO(message: types.Message, state=FSMContext):
 
             await message.answer(parse_mode="HTML",text=text)
             await get_command_start(message)
+
             await state.finish()
     except Exception as e:
         print(traceback.format_exc())
@@ -71,10 +71,14 @@ async def st(message: types.Message, state=FSMContext):
         await message.answer(parse_mode="HTML",text=text,reply_markup=kb_in)
         await state.finish()
     else:
-        real_activation_code = send_mail(ans)
-        await state.update_data(st = ans, real_activation_code = real_activation_code)
+        try:
+            real_activation_code = send_mail(ans)
+            await state.update_data(st = ans, real_activation_code = real_activation_code)
 
-        text="""<b>Третий шаг регистрации:</b> \n<em>Введи код подтверждения, высланный Вам на почту st\nЕсли вы ввели неправильный st-логин или вам не пришёл код, нажмите кнопку отмена и начните регистрацию заново</em>"""
+            text="""<b>Третий шаг регистрации:</b> \n<em>Введи код подтверждения, высланный Вам на почту st\nЕсли вы ввели неправильный st-логин или вам не пришёл код, нажмите кнопку отмена и начните регистрацию заново</em>"""
+        except Exception as e:
+            print(e, "\n", traceback.format_exc())
+            text=f"Произошла внутреняя ошибка бота. <b>{e}</b>. Перешлите это сообщение разработчикам их tg аккаунты указаны в описании бота" 
         await message.answer(parse_mode="HTML",text=text,reply_markup=cancel_st_kb)
         await register.received_activation_code.set()
 
@@ -95,25 +99,20 @@ async def check(message: types.Message, state=FSMContext):
     else:
         text="""<b>Вы ввели неверный код активации</b>\n Проверьте, правильно ли Вы ввели код, попробуйте снова.\n Если код не пришёл, или Вы уверенны, что вводите правильный код активации, обратитесь к разработчикам, их telegram аккаунты указаны в описании бота"""
         await message.answer(text=text,parse_mode="HTML")
-        await state.finish()
-        await add_new_user(types.CallbackQuery)
+        return
 
 # Отправка кода активации
 import smtplib, random
 def send_mail(student_st):
-    try:
-        smtpObj = smtplib.SMTP('smtp.yandex.ru:587')
-        smtpObj.starttls()
-        smtpObj.login('ag.spbu@yandex.ru', "B8ZjZ6yXxYPjDj2")
-        random_number = str(random.randint(100, 1000))
-        student_mail = student_st + "@student.spbu.ru"
-        smtpObj.sendmail("ag.spbu@yandex.ru",[student_mail], random_number)
-        smtpObj.quit()
-        random_number = int(random_number)
-        return random_number
-    except Exception as e:
-        print(traceback.format_exc())
-        return
+    smtpObj = smtplib.SMTP('smtp.yandex.ru:587')
+    smtpObj.starttls()
+    smtpObj.login('ag.spbu@yandex.ru', "journal.ag.spbu@yandex.ru")
+    random_number = str(random.randint(100, 1000))
+    student_mail = student_st + "@student.spbu.ru"
+    smtpObj.sendmail("ag.spbu@yandex.ru",[student_mail], random_number)
+    smtpObj.quit()
+    random_number = int(random_number)
+    return random_number
 
 
 def register_handlers(dp: Dispatcher):

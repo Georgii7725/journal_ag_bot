@@ -48,27 +48,44 @@ async def add_new_user(message: types.Message):
 async def state1(message: types.Message, state=FSMContext):
     try:
         ans = message.text
+        data = await state.get_data()
+        data = data['cal_date']
+        now=time.localtime()
 
         hour_entrance = ans[0]+ans[1]
         min_entrance = ans[3]+ans[4]
         hour_entrance_int = int(hour_entrance)
         min_entrance_int = int(min_entrance)
-        al_time = get_al_time_from_users(message.from_user.id)
+        al_time = get_al_time_from_users(message.from_user.id)[0]
         al_time = al_time.split("/")
         
         if(ans[2] == ":"):
-            hour_al_start = al_time[0][0] + al_time[0][1]
-            min_al_start = al_time[0][3] + al_time[0][4]
-            hour_al_end = al_time[1][0] + al_time[1][1]
-            min_al_end = al_time[1][3] + al_time[1][4]
-            if (hour_al_start < hour_entrance or (hour_al_start == hour_entrance and min_entrance <= min_al_start)) and (hour_entrance < hour_al_end or (hour_entrance == hour_al_end and min_entrance <= min_al_end)):
+            try:
+                hour_al_start = al_time[0][0] + al_time[0][1]
+                min_al_start = al_time[0][3] + al_time[0][4]
+            except:
+                hour_al_start = "0" + al_time[0][0]
+                min_al_start = al_time[0][2] + al_time[0][3]
+            try:
+                hour_al_end = al_time[1][0] + al_time[1][1]
+                min_al_end = al_time[1][3] + al_time[1][4]
+            except:
+                hour_al_end = "0" + al_time[1][1]
+                min_al_end = al_time[1][2] + al_time[1][3]
+            if now.tm_year == data[6:11] and now.tm_mon == data[3:5] and now.tm_mday == data[0:2]:
+                if (hour_al_start < hour_entrance or (hour_al_start == hour_entrance and min_entrance <= min_al_start)) and (hour_entrance < hour_al_end or (hour_entrance == hour_al_end and min_entrance <= min_al_end)):
+                    text="""<b>Укажите причину выхода</b>"""
+                    await state.update_data(entrance_time = f'{hour_entrance}:{min_entrance}')
+                    await message.answer(parse_mode="HTML",text=text)
+                    await exit_.reason.set()
+                else:
+                    await message.answer("Вы собираетесь придти после разрешённого Вам времени\nИзмените время возвращения", reply_markup=kb_in) #FIXME
+                    await state.finish()
+            else:
                 text="""<b>Укажите причину выхода</b>"""
                 await state.update_data(entrance_time = f'{hour_entrance}:{min_entrance}')
                 await message.answer(parse_mode="HTML",text=text)
                 await exit_.reason.set()
-            else:
-                await message.answer("Вы собираетесь придти после разрешённого Вам времени\nИзмените время возвращения", reply_markup=kb_in) #FIXME
-                await state.finish()    
         else:
             await message.answer("Введите время в формате 'ЧЧ:ММ'")
             return
