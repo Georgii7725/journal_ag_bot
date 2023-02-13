@@ -1,6 +1,7 @@
 from keyboards import *
 from create_bot import *
 from work_bd import *
+from .other import get_command_start
 
 # Состояния для регистрации
 class register(StatesGroup):
@@ -50,9 +51,8 @@ async def FIO(message: types.Message, state=FSMContext):
             Если это не так, обратитесь к разработчикам, их telegram-аккаунты вы можете найти в описании бота"""
 
             await message.answer(parse_mode="HTML",text=text)
-            answer_start = f"Приветствую, {message.from_user.full_name}. Этот бот поможет вам выйти из АГ. Чтобы больше узнать о функционале, воспользуйтесь кнопкой <b>Помощь</b>"""
+            await get_command_start(message)
 
-            await message.answer(text=answer_start,parse_mode="HTML",reply_markup=kb_start)# номпрально импортироваь get_command_start изз other  у меня не получилось поэтому будет так, если получится импортировать поэалуйста
             await state.finish()
     except Exception as e:
         print(traceback.format_exc())
