@@ -40,9 +40,9 @@ async def print_user_info(message: types.Message):
     if flag:
         user = get_user(user_id)
         my_ans = f"""<b>Данные пользователя:</b>
-        <em>Фамилия:</em> {user[1]},
-        <em>Имя:</em> {user[2]},
-        <em>Отчество:</em> {user[3]},
+        <em>Фамилия:</em> {user[1]}
+        <em>Имя:</em> {user[2]}
+        <em>Отчество:</em> {user[3]}
         <em>Комната:</em> {user[4]}
         <em>Твой st:</em> {user[5]}
         <em>Выход разрешён до</em> {user[6]}
